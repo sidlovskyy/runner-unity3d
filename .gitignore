@@ -1,0 +1,10 @@
+/src/Temp/
+/src/Library/
+/src/obj/
+*.svd
+/src/Assembly-CSharp-vs.csproj
+/src/Assembly-CSharp.csproj
+/src/Assembly-CSharp.pidb
+/src/src-csharp.sln
+/src/src.sln
+/src/src.userprefs

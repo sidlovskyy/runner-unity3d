@@ -8,3 +8,5 @@
 /src/src-csharp.sln
 /src/src.sln
 /src/src.userprefs
+
+/build/Win/game_Data/output_log.txt

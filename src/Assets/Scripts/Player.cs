@@ -98,4 +98,16 @@ public class Player : MonoBehaviour
 	{
 		get { return scores; }
 	}
+
+	public bool CannotSee(TerrainTile terrainTile)
+	{
+		//TODO: implement
+		return false;
+	}
+
+	public bool CanFullySee(TerrainTile terrainTile)
+	{
+		//TODO: implement
+		return false;
+	}
 }

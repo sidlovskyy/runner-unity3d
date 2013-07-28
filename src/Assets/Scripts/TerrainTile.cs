@@ -6,15 +6,27 @@ using UnityEngine;
 
 public class TerrainTile
 {
-	private GameObject _gameObject;
-
 	public bool IsBorderTail { get; set; }
 	
-	public Vector3 Direction { get; private set; }	
-
-	public TerrainTile(GameObject gameObject, Vector3 direction)
+	public GameObject GameObject { get; private set; }
+	
+	public Direction Direction { get; private set; }
+	
+	public int X { get; private set; }
+	
+	public int Y { get; private set; }
+	
+	public int DirectTilesBefore { get; private set; }
+	
+	public TerrainTileType Type { get; private set; }
+	
+	public TerrainTile(GameObject gameObject, int x, int y, Direction direction, int directTilesBefore, TerrainTileType type)
 	{
-		_gameObject = gameObject;
+		GameObject = gameObject;
+		X = x;
+		Y = y;		
+		DirectTilesBefore = directTilesBefore;
 		Direction = direction;
+		Type = type;
 	}	
 }

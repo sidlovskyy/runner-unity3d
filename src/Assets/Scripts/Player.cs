@@ -108,6 +108,14 @@ public class Player : MonoBehaviour
 	public bool CanFullySee(TerrainTile terrainTile)
 	{
 		//TODO: implement
-		return false;
+		return Vector3.Distance(transform.position, LocationToCoordinates(terrainTile.X, terrainTile.Y)) < 50.0f;
+	}
+			
+	private Vector3 LocationToCoordinates(int x, int y)
+	{
+		return new Vector3(
+			x * GlobalConstants.TerrainTileSize, 
+			0, 
+			y * GlobalConstants.TerrainTileSize);
 	}
 }

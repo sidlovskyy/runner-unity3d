@@ -11,4 +11,10 @@ public class Location
 		X = x;
 		Y = y;
 	}
+	
+	public bool IsDefault {
+		get {
+			return X == 0 && Y == 0;
+		}
+	}
 }

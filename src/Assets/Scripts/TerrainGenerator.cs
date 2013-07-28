@@ -39,15 +39,32 @@ public class TerrainGenerator : MonoBehaviour
 	{
 		UpdateTrack();
 	}
-
+	
+	#endregion
+	
+	public bool IsTurnTile(Vector3 point)
+	{
+		var location = CoordinatesToLocation(point);
+		var tile = GetTile(location.X, location.Y);
+		if((tile == null) || (tile.Type == TerrainTileType.Direct))
+		{
+			return false;
+		}
+		return true;
+	}
+	
+	public bool ContainsPoint(Vector3 point)
+	{
+		var location = CoordinatesToLocation(point);
+		return !location.IsDefault && (GetTile(location.X, location.Y) == null);
+	}
+	
 	private void UpdateTrack()
 	{
 		RemoveNotVisibleTiles();
 
 		AddNewTiles();
 	}
-	
-	#endregion
 	
 	private void RemoveNotVisibleTiles()
 	{
@@ -189,14 +206,6 @@ public class TerrainGenerator : MonoBehaviour
 		return (TerrainTileType) random;
 	}
 	
-	private Vector3 LocationToCoordinates(int x, int y)
-	{
-		return new Vector3(
-			x * GlobalConstants.TerrainTileSize, 
-			0, 
-			y * GlobalConstants.TerrainTileSize);
-	}
-	
 	private Direction GetLeftDirectionTo(Direction direction)
 	{
 		switch (direction)
@@ -231,5 +240,22 @@ public class TerrainGenerator : MonoBehaviour
 			}
 		}
 		return null;
+	}
+	
+	private Vector3 LocationToCoordinates(int x, int y)
+	{
+		return new Vector3(
+			x * GlobalConstants.TerrainTileSize, 
+			0, 
+			y * GlobalConstants.TerrainTileSize);
+	}
+	
+	private Location CoordinatesToLocation(Vector3 vector)
+	{
+		var tileSize = GlobalConstants.TerrainTileSize;
+		var x = (int)(((Mathf.Abs(vector.x) + tileSize / 2.0f) / tileSize) * (vector.x < 0 ? -1 : 1));
+		var y = (int)(((Mathf.Abs(vector.z) + tileSize / 2.0f) / tileSize) * (vector.z < 0 ? -1 : 1));
+		
+		return new Location(x, y);
 	}
 }

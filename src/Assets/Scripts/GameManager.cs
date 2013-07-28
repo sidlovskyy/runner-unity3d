@@ -35,6 +35,11 @@ public class GameManager : MonoBehaviour
 	{
 		get { return FindObjectOfType(typeof (Player)) as Player; }
 	}
+
+	public TerrainGenerator TerrainGenerator
+	{
+		get { return FindObjectOfType(typeof (TerrainGenerator)) as TerrainGenerator; }
+	}
 	
 	public GameObject[] Coins
 	{

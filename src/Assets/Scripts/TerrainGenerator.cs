@@ -8,8 +8,11 @@ public class TerrainGenerator : MonoBehaviour
 	public int MinDirectTiles = 10;
 	public int MaxDirectTiles = 15;
 	public GameManager GameManager;
+	
 	public GameObject TrackPrefab;	
-
+	public GameObject ObstaclePrefab;
+	public GameObject CoinPrefab;
+	
 	private List<TerrainTile> _terrainTiles;
 	private Player _player;
 	
@@ -199,6 +202,9 @@ public class TerrainGenerator : MonoBehaviour
 		
 		var newTileCoordinates = LocationToCoordinates(newTileLocation.X, newTileLocation.Y);
 		newTileGameObject.transform.Translate(newTileCoordinates);
+		
+		var coin = (GameObject) Instantiate(CoinPrefab);
+		coin.transform.Translate(newTileCoordinates);
 		
 		var newTile = new TerrainTile(
 			newTileGameObject, 

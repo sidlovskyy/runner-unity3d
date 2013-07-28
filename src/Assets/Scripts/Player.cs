@@ -26,6 +26,8 @@ public class Player : MonoBehaviour
 
 	void Update()
 	{
+		//gameManager.TerrainGenerator.Hihlight(transform.position);
+		
 		MoveForward();
 		
 		UpdateJumpState();
@@ -81,9 +83,9 @@ public class Player : MonoBehaviour
 		transform.Translate(Vector3.right * xAxis * Time.deltaTime * turnSpeed);
 	}
 	
-	bool IsTurnTile(Vector3 possition)
+	bool IsTurnTile(Vector3 position)
 	{
-		return gameManager.TerrainGenerator.IsTurnTile(possition);
+		return gameManager.TerrainGenerator.IsTurnTile(position);
 	}
 	
 	void TurnRight()

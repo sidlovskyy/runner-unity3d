@@ -20,19 +20,7 @@ public class TerrainGenerator : MonoBehaviour
 		_terrainTiles = new List<TerrainTile>();		
 		_player = GameManager.Player;
 		
-		
-		var firstTileObject = (GameObject) Instantiate(TrackPrefab);
-
-		var newTile = new TerrainTile(
-			firstTileObject, 
-			0, 
-			0, 
-			Direction.Up, 
-			0, 
-			TerrainTileType.Direct);
-		
-		newTile.IsBorderTail = true;
-		_terrainTiles.Add(newTile);
+		GenerateInitialTrack();
 	}
 
 	void Update()
@@ -41,6 +29,29 @@ public class TerrainGenerator : MonoBehaviour
 	}
 	
 	#endregion
+
+	void GenerateInitialTrack()
+	{
+		AddInitalTile(0);
+		AddInitalTile(1);
+		AddInitalTile(2);
+		AddInitalTile(3);
+		AddInitalTile(4);
+		AddInitalTile(5);
+		AddInitalTile(6);
+		
+		_terrainTiles[_terrainTiles.Count - 1].IsBorderTail = true;
+	}
+	
+	private void AddInitalTile(int index)
+	{
+		var tileGameObject = (GameObject) Instantiate(TrackPrefab);
+		var newTileCoordinates = LocationToCoordinates(0, index);
+		tileGameObject.transform.Translate(newTileCoordinates);
+		
+		var newTile = new TerrainTile(tileGameObject, 0, index, Direction.Up, index, TerrainTileType.Direct);
+		_terrainTiles.Add(newTile);
+	}
 	
 	public bool IsTurnTile(Vector3 point)
 	{
@@ -56,7 +67,18 @@ public class TerrainGenerator : MonoBehaviour
 	public bool ContainsPoint(Vector3 point)
 	{
 		var location = CoordinatesToLocation(point);
+		//TODO: wrong!!!
 		return !location.IsDefault && (GetTile(location.X, location.Y) == null);
+	}
+	
+	public void Hihlight(Vector3 point)
+	{
+		var location = CoordinatesToLocation(point);
+		var tile = GetTile(location.X, location.Y);
+		if(tile != null)
+		{
+			tile.GameObject.GetComponent<MeshRenderer>().material.color = Color.green;	
+		}
 	}
 	
 	private void UpdateTrack()

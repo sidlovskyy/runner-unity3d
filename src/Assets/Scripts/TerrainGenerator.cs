@@ -5,6 +5,7 @@ public class TerrainGenerator : MonoBehaviour
 {
 	public int minDirectTiles = 10;
 	public int maxDirectTiles = 15;
+	public int tailsWithoutObstaclesAfterTurn = 3;
 	public GameManager gameManager;
 
 	public GameObject trackPrefab;
@@ -247,7 +248,7 @@ public class TerrainGenerator : MonoBehaviour
 
 	private bool CanAddObstacle(TerrainTile tile, bool previousTileHasObstacle)
 	{
-		if ((tile.DirectTilesBefore < 2) || (tile.Type != TerrainTileType.Direct) || previousTileHasObstacle)
+		if ((tile.DirectTilesBefore < tailsWithoutObstaclesAfterTurn) || (tile.Type != TerrainTileType.Direct) || previousTileHasObstacle)
 		{
 			return false;
 		}

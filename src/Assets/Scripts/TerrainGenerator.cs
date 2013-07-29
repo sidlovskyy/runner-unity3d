@@ -1,31 +1,29 @@
-using Assets.Scripts.Auxilary;
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 
 public class TerrainGenerator : MonoBehaviour
 {
-	public int MinDirectTiles = 10;
-	public int MaxDirectTiles = 15;
-	public GameManager GameManager;
-	
-	public GameObject TrackPrefab;	
-	public GameObject ObstaclePrefab;
-	public GameObject CoinPrefab;
+	public int minDirectTiles = 10;
+	public int maxDirectTiles = 15;
+	public GameManager gameManager;
 
-	public float ObstacleProbability = 0.9f;
-	public float CoinProbability = 0.2f;
+	public GameObject trackPrefab;
+	public GameObject obstaclePrefab;
+	public GameObject coinPrefab;
+
+	public float obstacleProbability = 0.9f;
+	public float coinProbability = 0.2f;
 
 	private List<TerrainTile> _terrainTiles;
-	private Player _player;	
-	
+	private Player _player;
+
 	#region Events
-	
+
 	void Awake()
 	{
-		_terrainTiles = new List<TerrainTile>();		
-		_player = GameManager.Player;
-		
+		_terrainTiles = new List<TerrainTile>();
+		_player = gameManager.Player;
+
 		GenerateInitialTrack();
 	}
 
@@ -33,127 +31,146 @@ public class TerrainGenerator : MonoBehaviour
 	{
 		UpdateTrack();
 	}
-	
+
 	#endregion
 
-	void GenerateInitialTrack()
-	{
-		AddInitalTile(0);
-		AddInitalTile(1);
-		AddInitalTile(2);
-		AddInitalTile(3);
-		AddInitalTile(4);
-		AddInitalTile(5);
-		AddInitalTile(6);
-		
-		_terrainTiles[_terrainTiles.Count - 1].IsBorderTail = true;
-	}
-	
-	private void AddInitalTile(int index)
-	{
-		var tileGameObject = (GameObject) Instantiate(TrackPrefab);
-		var newTileCoordinates = LocationToCoordinates(0, index);
-		tileGameObject.transform.Translate(newTileCoordinates);
-		
-		var newTile = new TerrainTile(tileGameObject, 0, index, Direction.Up, index, TerrainTileType.Direct);
-		_terrainTiles.Add(newTile);
-	}
-	
+	#region Public members
+
 	public bool IsTurnTile(Vector3 point)
 	{
 		var location = CoordinatesToLocation(point);
-		var tile = GetTile(location.X, location.Y);
-		if((tile == null) || (tile.Type == TerrainTileType.Direct))
+		var tile = GetTile(location.x, location.y);
+		if ((tile == null) || (tile.Type == TerrainTileType.Direct))
 		{
 			return false;
 		}
-		Debug.Log(location.X + " " + location.Y + "|" + point.x + " " + point.z);
 		return true;
 	}
-	
+
 	public bool ContainsPoint(Vector3 point)
 	{
-		var location = CoordinatesToLocation(point);
-		//TODO: wrong!!!
-		return !location.IsDefault && (GetTile(location.X, location.Y) == null);
+		var location = CoordinatesToLocation(point);		
+		return (GetTile(location.x, location.y) != null);
 	}
-	
-	public void Hihlight(Vector3 point)
+
+	public bool IsZeroTile(Vector3 point)
 	{
 		var location = CoordinatesToLocation(point);
-		var tile = GetTile(location.X, location.Y);
-		if(tile != null)
-		{
-			tile.GameObject.GetComponent<MeshRenderer>().material.color = Color.green;	
-		}
+		return location.IsZero;
 	}
-	
+
+	#endregion
+
+	#region Private Members
+
+	#region Track Initialization
+
+	private void GenerateInitialTrack()
+	{
+		for (int index = 0; index < 7; index++)
+		{
+			AddInitalTile(index);
+		}
+
+		_terrainTiles[_terrainTiles.Count - 1].isBorderTail = true;
+	}
+
+	private void AddInitalTile(int index)
+	{
+		var tileGameObject = (GameObject)Instantiate(trackPrefab);
+		var newTileCoordinates = LocationToCoordinates(0, index);
+		tileGameObject.transform.Translate(newTileCoordinates);
+
+		var newTile = new TerrainTile(tileGameObject, 0, index, Direction.Up, index, TerrainTileType.Direct);
+		_terrainTiles.Add(newTile);
+	}
+
+	#endregion
+
 	private void UpdateTrack()
 	{
 		RemoveNotVisibleTiles();
 
 		AddNewTiles();
 	}
-	
+
+	#region Tiles Deletion
+
 	private void RemoveNotVisibleTiles()
 	{
-		List<TerrainTile> tilesToRemove = new List<TerrainTile>();
-		
+		var tilesToRemove = new List<TerrainTile>();
+
 		foreach (var terrainTile in _terrainTiles)
 		{
-			if (_player.CannotSee(terrainTile))
+			if (IsFarFromPlayer(terrainTile))
 			{
-				tilesToRemove.Add(terrainTile);				
+				tilesToRemove.Add(terrainTile);
 			}
 		}
-		
-		foreach(var tile in tilesToRemove)
+
+		foreach (var tile in tilesToRemove)
 		{
 			Delete(tile);
 		}
 	}
 
-	private void AddNewTiles()
+	private bool IsFarFromPlayer(TerrainTile terrainTile)
 	{
-		List<TerrainTile> tilesProccessAdding = new List<TerrainTile>();
-		
-		foreach (var terrainTile in _terrainTiles)
-		{
-			if (terrainTile.IsBorderTail && _player.CanFullySee(terrainTile))
-			{
-				tilesProccessAdding.Add(terrainTile);
-			}
-		}
-		
-		foreach(var tile in tilesProccessAdding)
-		{
-			AddNextTileTo(tile);
-		}
+		//NOTE: this is not the best implementation
+		return Vector3.Distance(_player.transform.position, LocationToCoordinates(terrainTile.X, terrainTile.Y)) >= 60.0f;
 	}
 
 	private void Delete(TerrainTile tile)
 	{
 		_terrainTiles.Remove(tile);
-		Destroy(tile.GameObject);
+		tile.Destroy();
+	}
+
+	#endregion
+
+	#region Tiles Adding
+	
+	private void AddNewTiles()
+	{
+		var tilesProccessAdding = new List<TerrainTile>();
+
+		foreach (var terrainTile in _terrainTiles)
+		{
+			if (terrainTile.isBorderTail && IsCloseToPlayer(terrainTile))
+			{
+				tilesProccessAdding.Add(terrainTile);
+			}
+		}
+
+		foreach (var tile in tilesProccessAdding)
+		{
+			AddNextTileTo(tile);
+		}
+	}
+
+	private bool IsCloseToPlayer(TerrainTile terrainTile)
+	{
+		//NOTE: this is not the best implementation
+		return Vector3.Distance(_player.transform.position, LocationToCoordinates(terrainTile.X, terrainTile.Y)) < 50.0f;
 	}
 
 	private void AddNextTileTo(TerrainTile tile)
 	{
-		if(tile.Type != TerrainTileType.Direct)
+		if (tile.Type != TerrainTileType.Direct)
 		{
 			AddNextDirectTileTo(tile);
 		}
-		else if(tile.DirectTilesBefore < MinDirectTiles)
+		else if (tile.DirectTilesBefore < minDirectTiles)
 		{
 			AddNextDirectTileTo(tile);
 		}
-		else if (tile.DirectTilesBefore >= MaxDirectTiles)
+		else if (tile.DirectTilesBefore >= maxDirectTiles)
 		{
 			AddNextTurnTileTo(tile);
-		} 
-		else 
+		}
+		else
 		{
-			if(MayAddTurnTile(tile))
+			if (CanAddTurnTile())
 			{
 				AddNextTurnTileTo(tile);
 			}
@@ -163,93 +180,69 @@ public class TerrainGenerator : MonoBehaviour
 			}
 		}
 	}
-	
-	private bool MayAddTurnTile(TerrainTile tile)
+
+	private bool CanAddTurnTile()
 	{
-		var mayAddTurnTile = Random.Range(0, MaxDirectTiles - MinDirectTiles);
+		var mayAddTurnTile = Random.Range(0, maxDirectTiles - minDirectTiles);
 		return mayAddTurnTile == 0;
 	}
-	
-	private void AddNextDirectTileTo(TerrainTile tile)
+
+	private void AddNextDirectTileTo(TerrainTile prevTile)
 	{
-		if(tile.Type == TerrainTileType.TurnLeft || tile.Type == TerrainTileType.TurnLeftRight) 
+		if (prevTile.Type == TerrainTileType.TurnLeft || prevTile.Type == TerrainTileType.TurnLeftRight)
 		{
-			var newTileDirection = GetLeftDirectionTo(tile.Direction);
-			AddNextTileTo(tile, newTileDirection, TerrainTileType.Direct, true);
+			var newTileDirection = GetLeftDirectionTo(prevTile.Direction);
+			AddNextTileTo(prevTile, newTileDirection, TerrainTileType.Direct, true);
 		}
-		if(tile.Type == TerrainTileType.TurnRight || tile.Type == TerrainTileType.TurnLeftRight) 
+		if (prevTile.Type == TerrainTileType.TurnRight || prevTile.Type == TerrainTileType.TurnLeftRight)
 		{
-			var newTileDirection = GetRightDirectionTo(tile.Direction);
-			AddNextTileTo(tile, newTileDirection, TerrainTileType.Direct, true);
+			var newTileDirection = GetRightDirectionTo(prevTile.Direction);
+			AddNextTileTo(prevTile, newTileDirection, TerrainTileType.Direct, true);
 		}
-		if(tile.Type ==  TerrainTileType.Direct)
+		if (prevTile.Type == TerrainTileType.Direct)
 		{
-			AddNextTileTo(tile, tile.Direction, TerrainTileType.Direct, false);
+			AddNextTileTo(prevTile, prevTile.Direction, TerrainTileType.Direct, false);
 		}
 	}
-	
-	private void AddNextTurnTileTo(TerrainTile tile)
+
+	private void AddNextTurnTileTo(TerrainTile prevTile)
 	{
 		var newTileType = GetRandomTurnType();
-		AddNextTileTo(tile, tile.Direction, newTileType, false);
+		AddNextTileTo(prevTile, prevTile.Direction, newTileType, false);
 	}
 
-	private bool color = false;
-
 	private void AddNextTileTo(
-		TerrainTile tile, 
-		Direction newDirection, 
-		TerrainTileType newTileType, 
+		TerrainTile tile,
+		Direction newDirection,
+		TerrainTileType newTileType,
 		bool isFirstAfterTurn)
 	{
 		var newTileLocation = GetNextLocationTo(tile.X, tile.Y, newDirection);
-		
-		var newTileGameObject = (GameObject) Instantiate(TrackPrefab);
-		newTileGameObject.GetComponent<MeshRenderer>().material.color =  color ? Color.red : Color.blue;
-		color = !color;
-		
-		var newTileCoordinates = LocationToCoordinates(newTileLocation.X, newTileLocation.Y);
-		newTileGameObject.transform.Translate(newTileCoordinates);		
+		var newTileGameObject = (GameObject)Instantiate(trackPrefab);
+		var newTileCoordinates = LocationToCoordinates(newTileLocation.x, newTileLocation.y);		
+		newTileGameObject.transform.Translate(newTileCoordinates);
 
 		var newTile = new TerrainTile(
-			newTileGameObject, 
-			newTileLocation.X, 
-			newTileLocation.Y, 
-			newDirection, 
-			isFirstAfterTurn ? 0 : tile.DirectTilesBefore + 1, 
+			newTileGameObject,
+			newTileLocation.x,
+			newTileLocation.y,
+			newDirection,
+			isFirstAfterTurn ? 0 : tile.DirectTilesBefore + 1,
 			newTileType);
 
 		if (CanAddCoin(newTile))
 		{
 			AddCoin(newTile);
 		}
-		else if (CanAddObstacle(newTile, tile.HasObstacle))
+		else if (CanAddObstacle(newTile, tile.hasObstacle))
 		{
 			AddObstacle(newTile);
 		}
 
-		Debug.Log("Added: " + newTileLocation.X + " " + newTileLocation.Y + " | " + newTileType);
-		
-		tile.IsBorderTail = false;
-		newTile.IsBorderTail = true;
-		
+		tile.isBorderTail = false;
+		newTile.isBorderTail = true;
+
 		_terrainTiles.Add(newTile);
-	}
-
-	private void AddObstacle(TerrainTile tile)
-	{
-		var obstacle = (GameObject)Instantiate(ObstaclePrefab);
-		obstacle.transform.Translate(tile.GameObject.transform.position);
-
-		//NOTE: assume obstacle has sime size in all directions
-		var halfObstacleSize = obstacle.collider.bounds.size.x / 2.0f;
-		var possibleMoveRange = GlobalConstants.TerrainTileSize / 2.0f - halfObstacleSize;
-		var shiftX = Random.Range(-possibleMoveRange, possibleMoveRange);
-		var shiftY = Random.Range(-possibleMoveRange, possibleMoveRange);
-		obstacle.transform.Translate(shiftX, 0 , shiftY);
-
-		obstacle.transform.parent = tile.GameObject.transform;
-		tile.HasObstacle = true;
 	}
 
 	private bool CanAddObstacle(TerrainTile tile, bool previousTileHasObstacle)
@@ -260,12 +253,35 @@ public class TerrainGenerator : MonoBehaviour
 		}
 
 		var random = Random.Range(0, 1.0f);
-		return random <= ObstacleProbability;
+		return random <= obstacleProbability;
+	}
+
+	private void AddObstacle(TerrainTile tile)
+	{
+		var obstacle = (GameObject)Instantiate(obstaclePrefab);
+		obstacle.transform.Translate(tile.GameObject.transform.position);
+
+		//NOTE: assume obstacle has sime size in all directions
+		var halfObstacleSize = obstacle.collider.bounds.size.x / 2.0f;
+		var possibleMoveRange = GlobalConstants.TerrainTileSize / 2.0f - halfObstacleSize;
+		var shiftX = Random.Range(-possibleMoveRange, possibleMoveRange);
+		var shiftY = Random.Range(-possibleMoveRange, possibleMoveRange);
+		obstacle.transform.Translate(shiftX, 0, shiftY);
+
+		//add as child to tile
+		obstacle.transform.parent = tile.GameObject.transform;
+		tile.hasObstacle = true;
+	}
+
+	private bool CanAddCoin(TerrainTile tile)
+	{
+		var random = Random.Range(0, 1.0f);
+		return random <= coinProbability;
 	}
 
 	private void AddCoin(TerrainTile tile)
 	{
-		var coin = (GameObject) Instantiate(CoinPrefab);
+		var coin = (GameObject)Instantiate(coinPrefab);
 		coin.transform.Translate(tile.GameObject.transform.position);
 
 		//NOTE: assume obstacle has sime size in all directions
@@ -275,29 +291,28 @@ public class TerrainGenerator : MonoBehaviour
 		var shiftY = Random.Range(-possibleMoveRange, possibleMoveRange);
 		coin.transform.Translate(shiftX, 0, shiftY);
 
+		//add as child to tile
 		coin.transform.parent = tile.GameObject.transform;
 	}
 
-	private bool CanAddCoin(TerrainTile tile)
-	{
-		var random = Random.Range(0, 1.0f);
-		return random <= CoinProbability;
-	}
+	#endregion
+
+	#region Helper Methods
 
 	private Location GetNextLocationTo(int x, int y, Direction direction)
 	{
-		if(direction == Direction.Up) return new Location(x, y + 1);
-		else if(direction == Direction.Left) return new Location(x + 1, y);
-		else if(direction == Direction.Down) return new Location(x, y - 1);
-		else return new Location(x - 1, y);
+		if (direction == Direction.Up) return new Location(x, y + 1);
+		if (direction == Direction.Left) return new Location(x + 1, y);
+		if (direction == Direction.Down) return new Location(x, y - 1);
+		return new Location(x - 1, y);
 	}
-	
+
 	private TerrainTileType GetRandomTurnType()
 	{
 		int random = Random.Range(1, 4);
-		return (TerrainTileType) random;
+		return (TerrainTileType)random;
 	}
-	
+
 	private Direction GetLeftDirectionTo(Direction direction)
 	{
 		switch (direction)
@@ -305,11 +320,11 @@ public class TerrainGenerator : MonoBehaviour
 			case Direction.Up: return Direction.Left;
 			case Direction.Left: return Direction.Down;
 			case Direction.Right: return Direction.Up;
-			default: 
+			default:
 			case Direction.Down: return Direction.Right;
 		}
 	}
-	
+
 	private Direction GetRightDirectionTo(Direction direction)
 	{
 		switch (direction)
@@ -317,37 +332,38 @@ public class TerrainGenerator : MonoBehaviour
 			case Direction.Up: return Direction.Right;
 			case Direction.Left: return Direction.Up;
 			case Direction.Right: return Direction.Down;
-			default: 
+			default:
 			case Direction.Down: return Direction.Left;
 		}
 	}
-	
+
 	private TerrainTile GetTile(int x, int y)
 	{
-		foreach(var tile in _terrainTiles)
+		foreach (var tile in _terrainTiles)
 		{
-			if(tile.X == x && tile.Y == y)
+			if (tile.X == x && tile.Y == y)
 			{
 				return tile;
 			}
 		}
 		return null;
 	}
-	
+
 	private Vector3 LocationToCoordinates(int x, int y)
 	{
-		return new Vector3(
-			x * GlobalConstants.TerrainTileSize, 
-			0, 
-			y * GlobalConstants.TerrainTileSize);
+		return new Vector3(x * GlobalConstants.TerrainTileSize, 0, y * GlobalConstants.TerrainTileSize);
 	}
-	
+
 	private Location CoordinatesToLocation(Vector3 vector)
 	{
-		var tileSize = GlobalConstants.TerrainTileSize;
+		const float tileSize = GlobalConstants.TerrainTileSize;
 		var x = (int)(((Mathf.Abs(vector.x) + tileSize / 2.0f) / tileSize) * (vector.x < 0 ? -1 : 1));
 		var y = (int)(((Mathf.Abs(vector.z) + tileSize / 2.0f) / tileSize) * (vector.z < 0 ? -1 : 1));
-		
+
 		return new Location(x, y);
 	}
+
+	#endregion
+
+	#endregion
 }

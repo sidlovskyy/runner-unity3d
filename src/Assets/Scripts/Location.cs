@@ -1,20 +1,20 @@
-using System;
-
 public class Location
 {
-	public int X { get; private set; }
-	
-	public int Y { get; private set; }
-	
+	public int x;
+
+	public int y;
+
 	public Location(int x, int y)
 	{
-		X = x;
-		Y = y;
+		this.x = x;
+		this.y = y;
 	}
-	
-	public bool IsDefault {
-		get {
-			return X == 0 && Y == 0;
+
+	public bool IsZero
+	{
+		get
+		{
+			return x == 0 && y == 0;
 		}
 	}
 }

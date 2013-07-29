@@ -19,7 +19,9 @@ public class TerrainTile
 	public int DirectTilesBefore { get; private set; }
 	
 	public TerrainTileType Type { get; private set; }
-	
+
+	public bool HasObstacle { get; set; }
+
 	public TerrainTile(GameObject gameObject, int x, int y, Direction direction, int directTilesBefore, TerrainTileType type)
 	{
 		GameObject = gameObject;
@@ -27,6 +29,7 @@ public class TerrainTile
 		Y = y;		
 		DirectTilesBefore = directTilesBefore;
 		Direction = direction;
-		Type = type;
+		Type = type;		
+		HasObstacle = false;
 	}	
 }

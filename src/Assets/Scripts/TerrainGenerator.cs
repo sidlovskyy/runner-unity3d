@@ -12,9 +12,12 @@ public class TerrainGenerator : MonoBehaviour
 	public GameObject TrackPrefab;	
 	public GameObject ObstaclePrefab;
 	public GameObject CoinPrefab;
-	
+
+	public float ObstacleProbability = 0.9f;
+	public float CoinProbability = 0.2f;
+
 	private List<TerrainTile> _terrainTiles;
-	private Player _player;
+	private Player _player;	
 	
 	#region Events
 	
@@ -206,11 +209,8 @@ public class TerrainGenerator : MonoBehaviour
 		color = !color;
 		
 		var newTileCoordinates = LocationToCoordinates(newTileLocation.X, newTileLocation.Y);
-		newTileGameObject.transform.Translate(newTileCoordinates);
-		
-		var coin = (GameObject) Instantiate(CoinPrefab);
-		coin.transform.Translate(newTileCoordinates);
-		
+		newTileGameObject.transform.Translate(newTileCoordinates);		
+
 		var newTile = new TerrainTile(
 			newTileGameObject, 
 			newTileLocation.X, 
@@ -218,6 +218,16 @@ public class TerrainGenerator : MonoBehaviour
 			newDirection, 
 			isFirstAfterTurn ? 0 : tile.DirectTilesBefore + 1, 
 			newTileType);
+
+		if (CanAddCoin(newTile))
+		{
+			AddCoin(newTile);
+		}
+		else if (CanAddObstacle(newTile, tile.HasObstacle))
+		{
+			AddObstacle(newTile);
+		}
+
 		Debug.Log("Added: " + newTileLocation.X + " " + newTileLocation.Y + " | " + newTileType);
 		
 		tile.IsBorderTail = false;
@@ -225,7 +235,55 @@ public class TerrainGenerator : MonoBehaviour
 		
 		_terrainTiles.Add(newTile);
 	}
-	
+
+	private void AddObstacle(TerrainTile tile)
+	{
+		var obstacle = (GameObject)Instantiate(ObstaclePrefab);
+		obstacle.transform.Translate(tile.GameObject.transform.position);
+
+		//NOTE: assume obstacle has sime size in all directions
+		var halfObstacleSize = obstacle.collider.bounds.size.x / 2.0f;
+		var possibleMoveRange = GlobalConstants.TerrainTileSize / 2.0f - halfObstacleSize;
+		var shiftX = Random.Range(-possibleMoveRange, possibleMoveRange);
+		var shiftY = Random.Range(-possibleMoveRange, possibleMoveRange);
+		obstacle.transform.Translate(shiftX, 0 , shiftY);
+
+		obstacle.transform.parent = tile.GameObject.transform;
+		tile.HasObstacle = true;
+	}
+
+	private bool CanAddObstacle(TerrainTile tile, bool previousTileHasObstacle)
+	{
+		if ((tile.DirectTilesBefore < 2) || (tile.Type != TerrainTileType.Direct) || previousTileHasObstacle)
+		{
+			return false;
+		}
+
+		var random = Random.Range(0, 1.0f);
+		return random <= ObstacleProbability;
+	}
+
+	private void AddCoin(TerrainTile tile)
+	{
+		var coin = (GameObject) Instantiate(CoinPrefab);
+		coin.transform.Translate(tile.GameObject.transform.position);
+
+		//NOTE: assume obstacle has sime size in all directions
+		var halfObstacleSize = coin.collider.bounds.size.x / 2.0f;
+		var possibleMoveRange = GlobalConstants.TerrainTileSize / 2.0f - halfObstacleSize;
+		var shiftX = Random.Range(-possibleMoveRange, possibleMoveRange);
+		var shiftY = Random.Range(-possibleMoveRange, possibleMoveRange);
+		coin.transform.Translate(shiftX, 0, shiftY);
+
+		coin.transform.parent = tile.GameObject.transform;
+	}
+
+	private bool CanAddCoin(TerrainTile tile)
+	{
+		var random = Random.Range(0, 1.0f);
+		return random <= CoinProbability;
+	}
+
 	private Location GetNextLocationTo(int x, int y, Direction direction)
 	{
 		if(direction == Direction.Up) return new Location(x, y + 1);

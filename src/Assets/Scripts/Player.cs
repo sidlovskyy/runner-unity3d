@@ -14,8 +14,7 @@ public class Player : MonoBehaviour
 
 	private int scores = 0;
 
-	public float rotationTime = 0.1f;
-	
+	public float rotationTime = 0.3f;	
 	private float rotationStartTime = 0.0f;
 	private float rotationAngle = 0.0f;
 	private float rotationProgress = 0.0f;
@@ -27,28 +26,31 @@ public class Player : MonoBehaviour
 	void Update()
 	{
 		//gameManager.TerrainGenerator.Hihlight(transform.position);
-		
-		MoveForward();
-		
+
 		UpdateJumpState();
 
-		if (!IsJumping()) {
+		if (!IsJumping())
+		{
 			MoveLeftRight();
 		}
-		
-		if(ShouldJump()) {
+
+		if (ShouldJump())
+		{
 			Jump();
 		}
-		
-		if(IsRotating())
+
+		if (IsTurnTile(transform.position) && !IsRotating() && !IsJumping())
+		{
+			gameManager.TerrainGenerator.Hihlight(transform.position);
+			HandleRotationInput();
+		}
+
+		if (IsRotating())
 		{
 			Rotate();
-		}
-		
-		if(IsTurnTile(transform.position) && !IsRotating() && !IsJumping())
-		{
-			HandleRotationInput ();
-		}
+		}	
+
+		MoveForward();
 
 		if(IsOutOfTrack()) {
 			Die();
@@ -172,14 +174,14 @@ public class Player : MonoBehaviour
 			rotationDelta = rotationAngle - rotationProgress;
 			isRotating = false;
 		}
-		
+
 		rotationProgress += rotationDelta;
 		transform.Rotate(Vector3.up, rotationDelta);
 	}
 
 	void HandleRotationInput()
 	{
-		var xAxis = Input.GetAxis(Axis.Horizontal);		
+		var xAxis = Input.GetAxis(Axis.Horizontal);
 		if(xAxis > 0.0f)
 		{
 			TurnRight();

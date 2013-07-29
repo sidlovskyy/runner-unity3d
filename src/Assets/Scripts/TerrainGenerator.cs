@@ -64,6 +64,7 @@ public class TerrainGenerator : MonoBehaviour
 		{
 			return false;
 		}
+		Debug.Log(location.X + " " + location.Y + "|" + point.x + " " + point.z);
 		return true;
 	}
 	
@@ -189,16 +190,20 @@ public class TerrainGenerator : MonoBehaviour
 		var newTileType = GetRandomTurnType();
 		AddNextTileTo(tile, tile.Direction, newTileType, false);
 	}
-	
+
+	private bool color = false;
+
 	private void AddNextTileTo(
 		TerrainTile tile, 
 		Direction newDirection, 
 		TerrainTileType newTileType, 
 		bool isFirstAfterTurn)
 	{
-		var newTileLocation = GetNextLocationTo(tile.X, tile.Y, tile.Direction);
+		var newTileLocation = GetNextLocationTo(tile.X, tile.Y, newDirection);
 		
 		var newTileGameObject = (GameObject) Instantiate(TrackPrefab);
+		newTileGameObject.GetComponent<MeshRenderer>().material.color =  color ? Color.red : Color.blue;
+		color = !color;
 		
 		var newTileCoordinates = LocationToCoordinates(newTileLocation.X, newTileLocation.Y);
 		newTileGameObject.transform.Translate(newTileCoordinates);
@@ -213,6 +218,7 @@ public class TerrainGenerator : MonoBehaviour
 			newDirection, 
 			isFirstAfterTurn ? 0 : tile.DirectTilesBefore + 1, 
 			newTileType);
+		Debug.Log("Added: " + newTileLocation.X + " " + newTileLocation.Y + " | " + newTileType);
 		
 		tile.IsBorderTail = false;
 		newTile.IsBorderTail = true;
